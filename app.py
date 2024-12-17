@@ -1,22 +1,18 @@
 import streamlit as st
-import google.generativeai as genai        
-from dotenv import load_dotenv
-import os
+from pathlib import Path
+import google.generativeai as genai
+from google_api_key import API_KEY
 
-load_dotenv()                              
+genai.configure(api_key=API_KEY)
 
-key = os.getenv("API_KEY")
-
-genai.configure(api_key=key)                
-
-generation_config = {                      
-    "temperature":1,
-    "top_p":0.95,
-    "top_k":0,
-    "max_output_tokens":8192,
+generation_config = {
+  "temperature": 1,
+  "top_p": 0.95,
+  "top_k": 0,
+  "max_output_tokens": 8192,
 }
 
-safety_settings = [                        
+safety_settings = [
   {
     "category": "HARM_CATEGORY_HARASSMENT",
     "threshold": "BLOCK_MEDIUM_AND_ABOVE"
@@ -35,7 +31,7 @@ safety_settings = [
   },
 ]
 
-system_prompts = [                                       
+system_prompts = [
     """
     You are a domain expert in medical image analysis. You are tasked with 
     examining medical images for a renowned hospital.
@@ -72,35 +68,40 @@ system_prompts = [
 ]
 
 model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
-                             generation_config=generation_config, 
+                              generation_config=generation_config,
                               safety_settings=safety_settings)
 
-st.set_page_config(page_title="Visual Medical Assistant",page_icon="🩺",layout="wide")
+
+st.set_page_config(page_title="Visual Medical Assistant", page_icon="🩺", 
+layout="wide")
 st.title("Visual Medical Assistant 👨‍⚕️ 🩺 🏥")
 st.subheader("An app to help with medical analysis using images")
 
-file_aploud = st.file_uploader("Upload the image for Analysis", type=["png","jpg","jpeg"])  
+file_uploaded = st.file_uploader('Upload the image for Analysis', 
+type=['png','jpg','jpeg'])
 
-if file_aploud:
-    st.image(file_aploud, width=200, caption="Uploaded Image")                            
-
-submit = st.button("Generate Analysis")                                                 
+if file_uploaded:
+    st.image(file_uploaded, width=200, caption='Uploaded Image')
+    
+submit=st.button("Generate Analysis")
 
 if submit:
-    image_data = file_aploud.getvalue() 
+
+    image_data = file_uploaded.getvalue()
+    
     image_parts = [
         {
             "mime_type" : "image/jpg",
             "data" : image_data
         }
     ]
-
-    prompt_parts = [    
+    
+    prompt_parts = [
         image_parts[0],
         system_prompts[0],
     ]
-
-    response = model.generate_content(prompt_parts)  
+    
+    response = model.generate_content(prompt_parts)
     if response:
         st.title('Detailed analysis based on the uploaded image')
-        st.write(response.text) 
+        st.write(response.text)
